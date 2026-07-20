@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
-protected $apiKey;
-
+    protected $apiKey;
 
     public function __construct()
     {

@@ -11,7 +11,7 @@ class TodoController extends Controller
 
     public function __construct()
     {
-        $this->firebaseUrl = rtrim(env('FIREBASE_DATABASE_URL'), '/');
+        $this->firebaseUrl = rtrim(env('FIREBASE_URL'), '/');
     }
 
     private function getUserId()
