@@ -1,6 +1,3 @@
-<!-- وضع هذا داخل نفس ملف الـ Blade -->
-<!-- resources/views/todo.blade.php -->
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,7 +7,6 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <!-- تضمين مكتبة أيقونات FontAwesome لتطابق التصميم -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -38,6 +34,28 @@
             padding:35px;
             box-shadow:0 25px 50px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .logout-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .logout-link {
+            color: #f87171;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-link:hover {
+            color: #f44336;
         }
 
         .header-title {
@@ -59,7 +77,6 @@
         .search-form {
             display: flex;
             align-items: center;
-            bg-color: #e2e8f0;
             background: #e2e8f0;
             border-radius: 50px;
             padding: 6px 6px 6px 16px;
@@ -338,8 +355,14 @@
  
 <div class="container">
     
+    <div class="logout-wrapper">
+        <a href="/logout" class="logout-link">
+            <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
+        </a>
+    </div>
+
     <!-- Search Task -->
-    <form action="{{ route('todo.search') }}" method="GET" class="search-form">
+    <form action="/" method="GET" class="search-form">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input
             type="text"
@@ -347,7 +370,7 @@
             placeholder="Search task..."
             value="{{ request('search') }}"
         >
-        <button class="search-btn">
+        <button class="search-btn" type="submit">
             Search
         </button>
     </form>
@@ -358,8 +381,8 @@
         <h1>Advanced Todo</h1>
     </div>
 
-    <!-- Add Task -->
-    <form class="add-form" action="/add" method="POST">
+    <!-- Add Task Form -->
+    <form class="add-form" action="/store" method="POST">
         @csrf
         <input
             type="text"
@@ -367,45 +390,46 @@
             placeholder="Enter task..."
             required
         >
-        <button class="add-btn">
+        <button class="add-btn" type="submit">
             Add
         </button>
     </form>
     
-    <!-- Tasks Container Box -->
     <div class="tasks-wrapper">
         <ul id="taskList">
-            @if(isset($tasks) && count($tasks) > 0)
-                @foreach($tasks as $id => $task)
-                <li draggable="true">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <span class="drag-icon"><i class="fa-solid fa-bars"></i></span>
-                        <span class="task">
-                            {{ $task['task'] }}
-                        </span>
-                    </div>
-
-                    <div class="actions">
-                        <button
-                            class="edit-btn"
-                            onclick="openModal('{{ $id }}', '{{ $task['task'] }}')"
-                        >
-                            <i class="fa-regular fa-pen-to-square"></i> Edit
-                        </button>
-
-                        <a
-                            class="delete-btn"
-                            href="/delete/{{ $id }}"
-                        >
-                            <i class="fa-regular fa-trash-can"></i> Delete
-                        </a>
-                    </div>
-                </li>
-                @endforeach
-            @else
+            @if(empty($tasks))
                 <div style="text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; font-size: 14px;">
-                    No tasks found. Add a new one! ✨
+                    ✨ لا توجد ملاحظات حالياً. أضف مهمتك الأولى!
                 </div>
+            @else
+                @foreach($tasks as $id => $task)
+                    @if(is_array($task) && isset($task['task']))
+                        <li draggable="true">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span class="drag-icon"><i class="fa-solid fa-bars"></i></span>
+                                <span class="task">
+                                    {{ $task['task'] }}
+                                </span>
+                            </div>
+
+                            <div class="actions">
+                                <button
+                                    class="edit-btn"
+                                    onclick="openModal('{{ $id }}', this)"
+                                >
+                                    <i class="fa-regular fa-pen-to-square"></i> Edit
+                                </button>
+
+                                <a
+                                    class="delete-btn"
+                                    href="/delete/{{ $id }}"
+                                >
+                                    <i class="fa-regular fa-trash-can"></i> Delete
+                                </a>
+                            </div>
+                        </li>
+                    @endif
+                @endforeach
             @endif
         </ul>
     </div>
@@ -417,6 +441,7 @@
         <h2>✏️ Edit Task</h2>
         <form id="editForm" method="POST">
             @csrf
+            @method('PATCH')
             <input
                 type="text"
                 name="task"
@@ -444,9 +469,12 @@
 
 <script>
     // ===== Modal =====
-    function openModal(id, task){
+    function openModal(id, buttonElement){
         document.getElementById('modal').style.display = 'flex';
-        document.getElementById('editInput').value = task;
+        
+        const taskText = buttonElement.closest('li').querySelector('.task').innerText.trim();
+        
+        document.getElementById('editInput').value = taskText;
         document.getElementById('editForm').action = "/update/" + id;
     }
 
@@ -458,7 +486,6 @@
     const taskList = document.getElementById('taskList');
     let draggedItem = null;
 
-    // تم تحديث جلب العناصر ليعمل بشكل صحيح عند السحب
     function setupDragAndDrop() {
         const items = document.querySelectorAll('#taskList li');
 
@@ -476,15 +503,19 @@
         });
     }
 
-    taskList.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(taskList, e.clientY);
-        if(afterElement == null){
-            taskList.appendChild(draggedItem);
-        }else{
-            taskList.insertBefore(draggedItem, afterElement);
-        }
-    });
+    if (taskList) {
+        taskList.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(taskList, e.clientY);
+            if(draggedItem) {
+                if(afterElement == null){
+                    taskList.appendChild(draggedItem);
+                }else{
+                    taskList.insertBefore(draggedItem, afterElement);
+                }
+            }
+        });
+    }
 
     function getDragAfterElement(container, y){
         const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
@@ -506,7 +537,6 @@
         }).element;
     }
 
-    // تشغيل الـ Drag & Drop عند تحميل الصفحة
     setupDragAndDrop();
 </script>
 
