@@ -127,7 +127,6 @@
             align-items: center;
         }
 
-    
         .add-form input{
             flex:1;
             padding: 8px;
@@ -138,9 +137,8 @@
             color: #333;
         }
 
-        
         .add-btn{
-        background:#e2e8f0;
+            background:#e2e8f0;
             color:#1e293b;
             border:none;
             padding:10px 24px;
